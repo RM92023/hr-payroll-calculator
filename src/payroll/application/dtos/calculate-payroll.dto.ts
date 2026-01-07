@@ -4,12 +4,17 @@ export class CalculatePayrollDto {
   @IsIn(['EMPLOYEE', 'CONTRACTOR'])
   contractType!: 'EMPLOYEE' | 'CONTRACTOR';
 
-  @IsNumber() @Min(0)
+  @IsNumber()
+  @Min(0)
   baseSalary!: number;
 
-  @IsOptional() @IsNumber() @Min(0)
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
   bonuses?: number;
 
-  @IsOptional() @IsNumber() @Min(0)
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
   otherDeductions?: number;
 }

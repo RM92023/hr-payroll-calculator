@@ -4,7 +4,8 @@ import { PayrollCalculatorTemplate } from './payroll.calculator.template';
 class Calc extends PayrollCalculatorTemplate {}
 
 describe('PayrollCalculatorTemplate', () => {
-  const makeCalc = () => new Calc([new EmployeeTaxStrategy(), new ContractorTaxStrategy()]);
+  const makeCalc = () =>
+    new Calc([new EmployeeTaxStrategy(), new ContractorTaxStrategy()]);
 
   it('calculates employee payroll with bonuses and deductions', () => {
     const calc = makeCalc();
@@ -82,12 +83,18 @@ describe('PayrollCalculatorTemplate', () => {
   it('rejects negative salary / bonuses / otherDeductions (validation branches)', () => {
     const calc = makeCalc();
 
-    expect(() => calc.calculate({ contractType: 'EMPLOYEE', baseSalary: -1 })).toThrow();
+    expect(() =>
+      calc.calculate({ contractType: 'EMPLOYEE', baseSalary: -1 }),
+    ).toThrow();
     expect(() =>
       calc.calculate({ contractType: 'EMPLOYEE', baseSalary: 1, bonuses: -1 }),
     ).toThrow();
     expect(() =>
-      calc.calculate({ contractType: 'EMPLOYEE', baseSalary: 1, otherDeductions: -1 }),
+      calc.calculate({
+        contractType: 'EMPLOYEE',
+        baseSalary: 1,
+        otherDeductions: -1,
+      }),
     ).toThrow();
   });
 

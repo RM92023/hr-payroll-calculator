@@ -1,31 +1,56 @@
 import { Test } from '@nestjs/testing';
-import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import request, { type App } from 'supertest';
 import { AppModule } from '../src/app.module';
+
+type PayrollResponse = {
+  gross: number;
+  net: number;
+};
 
 describe('Payroll API (e2e)', () => {
   let app: INestApplication;
+  let server: App;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
+    const moduleRef = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+
     app = moduleRef.createNestApplication();
+
+    // Igual que en main.ts (buena práctica para que e2e sea real)
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+
     await app.init();
+    server = app.getHttpServer() as unknown as App;
   });
 
-  afterAll(async () => app.close());
+  afterAll(async () => {
+    await app.close();
+  });
 
-  it('/payroll/health (GET)', () => request(app.getHttpServer()).get('/payroll/health').expect(200));
+  it('/payroll/health (GET)', async () => {
+    await request(server).get('/payroll/health').expect(200).expect({ status: 'ok' });
+  });
 
-  it('/payroll/rules (GET)', () => request(app.getHttpServer()).get('/payroll/rules').expect(200));
+  it('/payroll/rules (GET)', async () => {
+    await request(server).get('/payroll/rules').expect(200);
+  });
 
-  it('/payroll/calculate (POST)', () =>
-    request(app.getHttpServer())
+  it('/payroll/calculate (POST)', async () => {
+    const res = await request(server)
       .post('/payroll/calculate')
-      .send({ contractType: 'EMPLOYEE', baseSalary: 2500000, bonuses: 200000, otherDeductions: 0 })
-      .expect(201)
-      .expect(r => {
-        expect(r.body.net).toBeDefined();
-        expect(r.body.gross).toBe(2700000);
-      }),
-  );
+      .send({
+        contractType: 'EMPLOYEE',
+        baseSalary: 2_500_000,
+        bonuses: 200_000,
+        otherDeductions: 0,
+      })
+      .expect(201);
+
+    const body = res.body as PayrollResponse;
+    expect(body.gross).toBe(2_700_000);
+    expect(typeof body.net).toBe('number');
+  });
 });

@@ -15,7 +15,12 @@ export class PayrollController {
   rules() {
     return {
       note: 'Reglas ficticias de reto (no legales).',
-      employee: { health: '4%', pension: '4%', withholding: '10% sobre excedente de 2,000,000', extraMandatory: '1%' },
+      employee: {
+        health: '4%',
+        pension: '4%',
+        withholding: '10% sobre excedente de 2,000,000',
+        extraMandatory: '1%',
+      },
       contractor: { withholding: '12%' },
     };
   }

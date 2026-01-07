@@ -1,4 +1,7 @@
-import { PayrollInput, PayrollResult } from '../../domain/models/payroll.models';
+import {
+  PayrollInput,
+  PayrollResult,
+} from '../../domain/models/payroll.models';
 import { PayrollCalculatorTemplate } from '../../domain/services/payroll.calculator.template';
 
 export class CalculatePayrollUseCase {
