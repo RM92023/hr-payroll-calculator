@@ -20,9 +20,12 @@ describe('Payroll API (e2e)', () => {
     app = moduleRef.createNestApplication();
 
     // Igual que en main.ts (buena práctica para que e2e sea real)
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
 
     await app.init();
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     server = app.getHttpServer() as unknown as App;
   });
 
@@ -31,7 +34,10 @@ describe('Payroll API (e2e)', () => {
   });
 
   it('/payroll/health (GET)', async () => {
-    await request(server).get('/payroll/health').expect(200).expect({ status: 'ok' });
+    await request(server)
+      .get('/payroll/health')
+      .expect(200)
+      .expect({ status: 'ok' });
   });
 
   it('/payroll/rules (GET)', async () => {
