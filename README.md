@@ -1,98 +1,133 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# HR Payroll Calculator — AI-Native Artisan Challenge (Midterm)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API en **NestJS** para calcular **salario neto** a partir de salario base, bonos y deducciones. El objetivo no es “que funcione”, sino demostrar **Clean-ish Architecture**, patrones, tests automatizados y CI/CD (con IA como acelerador, pero con criterio humano).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+> **Nota:** Las reglas de impuestos/deducciones usadas aquí son **ficticias** (propósito académico). No representan normativa real.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## Arquitectura (separación por capas)
 
-## Project setup
+El módulo principal es `src/payroll` y está organizado por capas:
 
-```bash
-$ npm install
+- `domain/`  
+  Modelos y lógica de negocio pura (sin Nest). Aquí vive el cálculo y las reglas.
+- `application/`  
+  Casos de uso (orquestación). No conoce HTTP.
+- `presentation/`  
+  Controladores HTTP (Nest) y entrada/salida hacia la aplicación.
+
+Flujo: **Controller → UseCase → Domain (Template + Strategies) → Result**
+
+---
+
+## Patrones de diseño usados
+
+### 1) Template Method (Patrón principal)
+
+`PayrollCalculatorTemplate.calculate()` define el algoritmo del cálculo de nómina y lo mantiene consistente:
+
+1) Validación de entrada  
+2) Cálculo de gross  
+3) Cálculo de deducciones/impuestos  
+4) Cálculo de neto y breakdown
+
+Esto evita duplicación y asegura un flujo único y controlado.
+
+### 2) Strategy (Reglas por tipo de contrato)
+
+`EmployeeTaxStrategy` y `ContractorTaxStrategy` encapsulan reglas de impuestos/deducciones por tipo de contrato.  
+Esto permite extender reglas sin modificar el template (Open/Closed).
+
+---
+
+## Endpoints
+
+- `GET /payroll/health`  
+  Health check simple.
+- `GET /payroll/rules`  
+  Expone las reglas (ficticias) configuradas.
+- `POST /payroll/calculate`  
+  Calcula nómina y devuelve el detalle.
+
+Ejemplo request:
+
+```json
+{
+  "contractType": "EMPLOYEE",
+  "baseSalary": 2500000,
+  "bonuses": 200000,
+  "otherDeductions": 0
+}
 ```
 
-## Compile and run the project
+---
+
+## Cómo correr el proyecto (local)
+
+Instalar dependencias:
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm ci
 ```
 
-## Run tests
+Levantar en modo desarrollo:
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm run start:dev
 ```
 
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Lint:
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm run lint
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Unit tests + coverage:
 
-## Resources
+```bash
+npm run test:cov
+# o
+npm test -- --coverage
+```
 
-Check out a few resources that may come in handy when working with NestJS:
+E2E (pruebas de endpoints):
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+```bash
+npm run test:e2e
+```
 
-## Support
+Build:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+```bash
+npm run build
+```
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## CI/CD (GitHub Actions)
 
-## License
+El pipeline corre en cada push / PR a `develop` y `main` y ejecuta:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- `npm run lint`
+- `npm test -- --coverage`
+- `npm run test:e2e`
+- `npm run build`
+
+---
+
+## AI Collaboration Log (Human in the Loop)
+
+### Ejemplo 1 — Cobertura por ramas (branch coverage)
+
+La IA inicialmente propuso tests “happy path”. Ajusté y añadí edge cases (sin strategy, withholding=0, deducciones > gross, negativos) para cubrir ramas reales del dominio y asegurar robustez.
+
+### Ejemplo 2 — CI fallando por lint en e2e
+
+La IA generó e2e con accesos a `any` que rompían el lint. Ajusté tipado y/o apliqué overrides de ESLint solo para `test/**`, manteniendo reglas estrictas en `src/**`.
+
+---
+
+## Entrega
+
+Repositorio: https://github.com/RM92023/hr-payroll-calculator
