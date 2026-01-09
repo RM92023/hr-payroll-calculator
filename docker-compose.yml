@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    container_name: hr_payroll_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hr
+      POSTGRES_PASSWORD: hrpass
+      POSTGRES_DB: hr_payroll
+    ports:
+      - "5432:5432"
+    volumes:
+      - hr_payroll_data:/var/lib/postgresql/data
+
+volumes:
+  hr_payroll_data:

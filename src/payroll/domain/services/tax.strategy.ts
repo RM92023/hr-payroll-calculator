@@ -29,6 +29,8 @@ export class ContractorTaxStrategy implements TaxStrategy {
     return input.contractType === 'CONTRACTOR';
   }
 
+  // HUMAN REVIEW: Tasas ficticias para el reto. Usé Strategy para separar reglas por contrato
+  // y cumplir Open/Closed: agregar un nuevo contrato no obliga a modificar el Template Method.
   computeTaxes(gross: number) {
     // FICTICIO: retención única 12%
     const withholding = gross * 0.12;

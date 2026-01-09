@@ -39,6 +39,9 @@ export abstract class PayrollCalculatorTemplate {
     };
   }
 
+  // HUMAN REVIEW: La IA proponía dejar toda la validación al DTO/controller.
+  // Yo mantuve validación de dominio aquí (input requerido, no negativos, otherDeductions <= gross)
+  // porque la lógica de negocio debe ser independiente de HTTP y seguir siendo testeable.
   protected validate(input: PayrollInput) {
     if (!input) throw new Error('input required');
     if (input.baseSalary < 0) throw new Error('baseSalary must be >= 0');
