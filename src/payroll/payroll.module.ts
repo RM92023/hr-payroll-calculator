@@ -16,6 +16,8 @@ class DefaultPayrollCalculator extends PayrollCalculatorTemplate {}
     EmployeeTaxStrategy,
     ContractorTaxStrategy,
     {
+      // HUMAN REVIEW: Mantengo el dominio puro (sin Nest). Inyecto estrategias desde el módulo
+      // para que el template/calculadora sea fácil de testear y no cree dependencias internamente.
       provide: 'TAX_STRATEGIES',
       useFactory: (
         e: EmployeeTaxStrategy,
