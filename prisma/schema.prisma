@@ -13,6 +13,11 @@ enum ContractType {
   CONTRACTOR
 }
 
+enum RuleUnit {
+  PERCENT   // ej: 4 = 4%
+  AMOUNT    // ej: 2000000
+}
+
 model Employee {
   id        String   @id @default(uuid())
   name      String
@@ -47,4 +52,16 @@ model PayrollRun {
 
   employee Employee @relation(fields: [employeeId], references: [id])
   contract Contract @relation(fields: [contractId], references: [id])
+}
+
+model PayrollRule {
+  id           String       @id @default(uuid())
+  key          String       @unique // ej: "EMPLOYEE_HEALTH_PCT"
+  label        String
+  contractType ContractType? // null = aplica a todos
+  unit         RuleUnit
+  value        Float
+  enabled      Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
