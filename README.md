@@ -87,8 +87,15 @@ Unit tests + coverage:
 
 ```bash
 npm run test:cov
-# o
-npm test -- --coverage
+# Unit (src) tests
+# (this runs jest configured to use `src` as rootDir)
+npm test
+
+# E2E tests (separate config)
+npm run test:e2e
+
+# Combined coverage for e2e (covers both src and test in coverage output)
+npx jest --coverage --config ./test/jest-e2e.json
 ```
 
 E2E (pruebas de endpoints):
@@ -96,6 +103,24 @@ E2E (pruebas de endpoints):
 ```bash
 npm run test:e2e
 ```
+
+### Seed (llenar reglas de nómina)
+
+Si usas una base PostgreSQL local/CI y quieres cargar las reglas iniciales:
+
+```bash
+# Asegúrate de tener DATABASE_URL exportado
+node prisma/seed.js
+```
+
+### Cobertura
+
+El reporte HTML se genera en `coverage/lcov-report/index.html`. Para abrirlo en Windows:
+
+```powershell
+start coverage/lcov-report/index.html
+```
+
 
 Build:
 
@@ -125,6 +150,22 @@ La IA inicialmente propuso tests “happy path”. Ajusté y añadí edge cases 
 ### Ejemplo 2 — CI fallando por lint en e2e
 
 La IA generó e2e con accesos a `any` que rompían el lint. Ajusté tipado y/o apliqué overrides de ESLint solo para `test/**`, manteniendo reglas estrictas en `src/**`.
+
+### Ejemplo 3 — Mocking y $queryRaw
+
+La IA sugirió un `MockPrismaService` para evitar dependencia de DB en e2e. Intervine con: 
+
+- **Qué hizo la IA:** generó el `MockPrismaService` con comportamientos básicos.
+- **Qué hice (HUMAN REVIEW):** añadí validaciones (unique email, FK errors), implementé un `$queryRaw` mínimo para el uso de `PayrollRuleRepository` y dejé en el archivo `src/prisma/mock-prisma.service.ts` el comentario `// HUMAN REVIEW:` explicando la intención y la limitación del mock.
+
+Esto está documentado en el código (busca `HUMAN REVIEW` en `src/prisma/mock-prisma.service.ts`) y en este README.
+
+### Ejemplo 4 — Refactor y tests para `PayrollRuleRepository`
+
+La IA creó inicialmente el repositorio usando `this.prisma.$queryRaw`. Para cumplir pruebas y cobertura añadí:
+
+- Tests unitarios en `src/payroll/domain/repositories/payroll-rule.repository.spec.ts` que mockean `$queryRaw` y cubren CRUD.
+- COMMIT NOTE: añadí comentarios `// HUMAN REVIEW:` en los archivos donde la IA fue asistente para dejar evidencia de revisión humana.
 
 ---
 
