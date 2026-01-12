@@ -15,3 +15,25 @@ export interface PayrollResult {
   net: number;
   breakdown: Record<string, number>;
 }
+
+export interface PayrollRulesSnapshot {
+  employee: {
+    healthPct: number;
+    pensionPct: number;
+    extraMandatoryPct: number;
+    withholdingPct: number;
+    withholdingThreshold: number;
+  };
+  contractor: {
+    withholdingPct: number;
+  };
+}
+
+export interface PayrollInput {
+  contractType: ContractType;
+  baseSalary: number;
+  bonuses?: number;
+  otherDeductions?: number;
+
+  rules?: PayrollRulesSnapshot;
+}

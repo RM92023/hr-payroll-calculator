@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+  // Required when using driver adapters (PrismaPg) in Prisma v7+
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum ContractType {
+  EMPLOYEE
+  CONTRACTOR
+}
+
+enum RuleUnit {
+  PERCENT   // ej: 4 = 4%
+  AMOUNT    // ej: 2000000
+}
+
+model Employee {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  contracts  Contract[]
+  payrollRun PayrollRun[]
+}
+
+model Contract {
+  id           String       @id @default(uuid())
+  employeeId   String
+  contractType ContractType
+  baseSalary   Int
+  active       Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+
+  employee   Employee  @relation(fields: [employeeId], references: [id])
+  payrollRun PayrollRun[]
+}
+
+model PayrollRun {
+  id          String   @id @default(uuid())
+  employeeId  String
+  contractId  String
+  period      String   // ej: "2026-01"
+  gross       Int
+  net         Int
+  breakdown   Json
+  createdAt   DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id])
+  contract Contract @relation(fields: [contractId], references: [id])
+}
+
+model PayrollRule {
+  id           String       @id @default(uuid())
+  key          String       @unique // ej: "EMPLOYEE_HEALTH_PCT"
+  label        String
+  contractType ContractType? // null = aplica a todos
+  unit         RuleUnit
+  value        Float
+  enabled      Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}

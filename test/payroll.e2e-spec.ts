@@ -1,16 +1,21 @@
 import { Test } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
-import request, { type App } from 'supertest';
+import request from 'supertest';
 import { AppModule } from '../src/app.module';
 
-type PayrollResponse = {
+type PayrollRunResponse = {
+  id: string;
+  employeeId: string;
+  contractId: string;
+  period: string;
   gross: number;
   net: number;
+  breakdown: Record<string, unknown>;
 };
 
 describe('Payroll API (e2e)', () => {
   let app: INestApplication;
-  let server: App;
+  let server: any;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -26,7 +31,7 @@ describe('Payroll API (e2e)', () => {
 
     await app.init();
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    server = app.getHttpServer() as unknown as App;
+    server = app.getHttpServer() as unknown as any;
   });
 
   afterAll(async () => {
@@ -44,19 +49,40 @@ describe('Payroll API (e2e)', () => {
     await request(server).get('/payroll/rules').expect(200);
   });
 
-  it('/payroll/calculate (POST)', async () => {
-    const res = await request(server)
-      .post('/payroll/calculate')
-      .send({
-        contractType: 'EMPLOYEE',
-        baseSalary: 2_500_000,
-        bonuses: 200_000,
-        otherDeductions: 0,
-      })
+  it('/payroll/runs (POST) creates a PayrollRun', async () => {
+    // 1) employee
+    const emp = await request(server)
+      .post('/employees')
+      .send({ name: 'Payroll Emp', email: `payroll.${Date.now()}@mail.com` })
       .expect(201);
 
-    const body = res.body as PayrollResponse;
-    expect(body.gross).toBe(2_700_000);
+    const employeeId = emp.body.id as string;
+
+    // 2) contract
+    const c = await request(server)
+      .post('/contracts')
+      .send({ employeeId, contractType: 'EMPLOYEE', baseSalary: 2_500_000 })
+      .expect(201);
+
+    const contractId = c.body.id as string;
+
+    // 3) payroll run
+    const res = await request(server)
+      .post('/payroll/runs')
+      .send({ employeeId, contractId, period: '2026-01', bonuses: 200_000 })
+      .expect(201);
+
+    const body = res.body as PayrollRunResponse;
+    expect(body).toHaveProperty('id');
+    expect(body.employeeId).toBe(employeeId);
+    expect(body.contractId).toBe(contractId);
+    expect(body.period).toBe('2026-01');
+    expect(typeof body.gross).toBe('number');
     expect(typeof body.net).toBe('number');
+  });
+
+  it('/payroll/runs (GET) returns array', async () => {
+    const res = await request(server).get('/payroll/runs').expect(200);
+    expect(Array.isArray(res.body)).toBe(true);
   });
 });
