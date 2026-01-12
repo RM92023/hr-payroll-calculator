@@ -1,5 +1,7 @@
 generator client {
   provider = "prisma-client-js"
+  // Required when using driver adapters (PrismaPg) in Prisma v7+
+  engineType = "client"
 }
 
 datasource db {

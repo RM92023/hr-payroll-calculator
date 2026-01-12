@@ -1,14 +1,12 @@
-import { Inject } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Employee } from '@prisma/client';
+import { PrismaService } from '../../../prisma/prisma.service';
 
+@Injectable()
 export class FindEmployeesUseCase {
-  constructor(@Inject('PRISMA') private prisma: any) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async execute(): Promise<Employee[]> {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment
-    const list = await this.prisma.employee.findMany({
-      orderBy: { createdAt: 'desc' },
-    });
-    return list as unknown as Employee[];
+    return this.prisma.employee.findMany({ orderBy: { createdAt: 'desc' } });
   }
 }
