@@ -1,14 +1,24 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { CalculatePayrollUseCase } from '../../application/use-cases/calculate-payroll.usecase';
-import { CalculatePayrollDto } from '../../application/dtos/calculate-payroll.dto';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { CreatePayrollRunUseCase } from '../../application/use-cases/create-payroll-run.usecase';
+import { FindPayrollRunsUseCase } from '../../application/use-cases/find-payroll-runs.usecase';
+import { CreatePayrollRunDto } from '../../application/dtos/create-payroll-run.dto';
+import { FindPayrollRunsQueryDto } from '../../application/dtos/find-payroll-runs.query.dto';
 
 @Controller('payroll')
 export class PayrollController {
-  constructor(private readonly uc: CalculatePayrollUseCase) {}
+  constructor(
+    private readonly createRunUseCase: CreatePayrollRunUseCase,
+    private readonly findRunsUseCase: FindPayrollRunsUseCase,
+  ) {}
 
-  @Post('calculate')
-  calculate(@Body() dto: CalculatePayrollDto) {
-    return this.uc.execute(dto);
+  @Post('runs')
+  createRun(@Body() dto: CreatePayrollRunDto) {
+    return this.createRunUseCase.execute(dto);
+  }
+
+  @Get('runs')
+  findRuns(@Query() query: FindPayrollRunsQueryDto) {
+    return this.findRunsUseCase.execute(query);
   }
 
   @Get('rules')
