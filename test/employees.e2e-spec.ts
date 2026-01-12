@@ -1,7 +1,12 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard } from '@nestjs/throttler';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
+import { PrismaService } from '../src/prisma/prisma.service';
+import MockPrismaService from '../src/prisma/mock-prisma.service';
 
 describe('Employees API (e2e)', () => {
   let app: INestApplication;
@@ -10,13 +15,23 @@ describe('Employees API (e2e)', () => {
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
-    }).compile();
+    })
+      .overrideProvider(PrismaService)
+      .useClass(MockPrismaService)
+      .overrideProvider(APP_GUARD)
+      .useValue({ canActivate: () => true })
+      .overrideProvider(ThrottlerGuard)
+      .useValue({ canActivate: () => true, onModuleInit: () => {} })
+      .compile();
     app = moduleRef.createNestApplication();
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, transform: true }),
     );
+    const mock = moduleRef.get(PrismaService);
+    if (mock && typeof mock.reset === 'function') mock.reset();
+
     await app.init();
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+
     server = app.getHttpServer();
   });
 

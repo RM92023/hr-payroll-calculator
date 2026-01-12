@@ -6,20 +6,29 @@ import { PayrollModule } from './payroll/payroll.module';
 import { EmployeesModule } from './employees/employees.module';
 import { ContractsModule } from './contracts/contracts.module';
 
+const disableThrottler =
+  process.env.DISABLE_THROTTLER === '1' || process.env.NODE_ENV === 'test';
+
+const imports: any[] = [
+  PrismaModule,
+  PayrollModule,
+  EmployeesModule,
+  ContractsModule,
+];
+const providers = [] as any[];
+
+if (!disableThrottler) {
+  // cast to any because ThrottlerModule.forRoot returns a DynamicModule
+  // and our `imports` array is typed as `any[]` to allow mixed entries.
+  imports.unshift(
+    ThrottlerModule.forRoot({ ttl: 60, limit: 20 } as any) as any,
+  );
+  providers.push({ provide: APP_GUARD, useClass: ThrottlerGuard });
+}
+
 @Module({
-  imports: [
-    ThrottlerModule.forRoot(([{ ttl: 60, limit: 20 }] as unknown) as any),
-    PrismaModule,
-    PayrollModule,
-    EmployeesModule,
-    ContractsModule,
-  ],
+  imports,
   controllers: [],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-  ],
+  providers,
 })
 export class AppModule {}
