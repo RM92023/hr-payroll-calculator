@@ -1,6 +1,9 @@
 import { Module } from '@nestjs/common';
 import { PayrollController } from './presentation/controllers/payroll.controller';
 import { CalculatePayrollUseCase } from './application/use-cases/calculate-payroll.usecase';
+import { CreatePayrollRunUseCase } from './application/use-cases/create-payroll-run.usecase';
+import { FindPayrollRunsUseCase } from './application/use-cases/find-payroll-runs.usecase';
+import { PrismaService } from '../prisma/prisma.service';
 import { PayrollCalculatorTemplate } from './domain/services/payroll.calculator.template';
 import {
   ContractorTaxStrategy,
@@ -37,7 +40,22 @@ class DefaultPayrollCalculator extends PayrollCalculatorTemplate {}
         new CalculatePayrollUseCase(calc),
       inject: [PayrollCalculatorTemplate],
     },
+    {
+      provide: CreatePayrollRunUseCase,
+      useFactory: (prisma: PrismaService, calc: PayrollCalculatorTemplate) =>
+        new CreatePayrollRunUseCase(prisma, calc),
+      inject: [PrismaService, PayrollCalculatorTemplate],
+    },
+    {
+      provide: FindPayrollRunsUseCase,
+      useFactory: (prisma: PrismaService) => new FindPayrollRunsUseCase(prisma),
+      inject: [PrismaService],
+    },
   ],
-  exports: [CalculatePayrollUseCase],
+  exports: [
+    CalculatePayrollUseCase,
+    CreatePayrollRunUseCase,
+    FindPayrollRunsUseCase,
+  ],
 })
 export class PayrollModule {}
