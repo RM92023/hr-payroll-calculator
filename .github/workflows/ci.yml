@@ -34,6 +34,7 @@ jobs:
       - run: npm ci
       - run: npx prisma generate
       - run: npx prisma migrate deploy
+      - run: node prisma/seed.js
       - run: npm run lint
       - run: npm test -- --coverage
       - run: npm run test:e2e

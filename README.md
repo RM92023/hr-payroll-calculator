@@ -110,7 +110,8 @@ Si usas una base PostgreSQL local/CI y quieres cargar las reglas iniciales:
 
 ```bash
 # Asegúrate de tener DATABASE_URL exportado
-node prisma/seed.js
+npx prisma db seed
+# (alternativamente, puedes ejecutar `node prisma/seed.js` manualmente)
 ```
 
 ### Cobertura
