@@ -17,8 +17,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json",
-    "postinstall": "prisma generate"
+    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
+    "postinstall": "node ./scripts/postinstall.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -77,6 +77,58 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
+    "coverageThreshold": {
+      "global": {
+        "branches": 40,
+        "functions": 40,
+        "lines": 40,
+        "statements": 40
+      },
+      "<rootDir>/contracts/domain/**": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      },
+      "<rootDir>/contracts/application/**": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      },
+      "<rootDir>/employees/domain/**": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      },
+      "<rootDir>/employees/application/**": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      },
+      "<rootDir>/payroll/domain/**": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      },
+      "<rootDir>/payroll/application/**": {
+        "branches": 70,
+        "functions": 70,
+        "lines": 70,
+        "statements": 70
+      }
+    },
     "testEnvironment": "node"
+  },
+  "overrides": {
+    "@babel/helpers": "7.28.4",
+    "@babel/helper-validator-identifier": "7.28.5"
+  }
+  ,
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
