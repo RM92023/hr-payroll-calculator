@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Test } from '@nestjs/testing';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerGuard } from '@nestjs/throttler';
@@ -6,7 +6,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module';
 import { PrismaService } from '../src/prisma/prisma.service';
-import MockPrismaService from '../src/prisma/mock-prisma.service';
+import { PrismaExceptionFilter } from '../src/prisma/prisma-exception.filter';
 
 type PayrollRunResponse = {
   id: string;
@@ -21,13 +21,12 @@ type PayrollRunResponse = {
 describe('Payroll API (e2e)', () => {
   let app: INestApplication;
   let server: any;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })
-      .overrideProvider(PrismaService)
-      .useClass(MockPrismaService)
       .overrideProvider(APP_GUARD)
       .useValue({ canActivate: () => true })
       .overrideProvider(ThrottlerGuard)
@@ -41,13 +40,21 @@ describe('Payroll API (e2e)', () => {
       new ValidationPipe({ whitelist: true, transform: true }),
     );
 
-    // reset mock state if available
-    const mock = moduleRef.get(PrismaService);
-    if (mock && typeof mock.reset === 'function') mock.reset();
+    // Keep error mapping consistent with main.ts
+    app.useGlobalFilters(new PrismaExceptionFilter());
+
+    prisma = moduleRef.get(PrismaService);
 
     await app.init();
 
     server = app.getHttpServer() as unknown as any;
+  });
+
+  beforeEach(async () => {
+    // Ensure isolation between tests (real DB)
+    await prisma.payrollRun.deleteMany();
+    await prisma.contract.deleteMany();
+    await prisma.employee.deleteMany();
   });
 
   afterAll(async () => {
@@ -63,6 +70,29 @@ describe('Payroll API (e2e)', () => {
 
   it('/payroll/rules (GET)', async () => {
     await request(server).get('/payroll/rules').expect(200);
+  });
+
+  it('/payroll/rules CRUD (POST/PUT/DELETE)', async () => {
+    const createRes = await request(server)
+      .post('/payroll/rules')
+      .send({
+        key: `EMPLOYEE_TEST_${Date.now()}`,
+        label: 'Test rule',
+        contractType: 'EMPLOYEE',
+        unit: 'PERCENT',
+        value: 5,
+      })
+      .expect(201);
+
+    const ruleId = createRes.body.id as string;
+    expect(ruleId).toBeDefined();
+
+    await request(server)
+      .put(`/payroll/rules/${ruleId}`)
+      .send({ value: 6, enabled: false })
+      .expect(200);
+
+    await request(server).delete(`/payroll/rules/${ruleId}`).expect(200);
   });
 
   it('/payroll/runs (POST) creates a PayrollRun', async () => {

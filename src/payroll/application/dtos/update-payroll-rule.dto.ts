@@ -1,4 +1,5 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { ContractType, RuleUnit } from '@prisma/client';
+import { IsEnum, IsNumber, IsOptional, IsString, Min } from 'class-validator';
 
 export class UpdatePayrollRuleDto {
   @IsOptional()
@@ -10,15 +11,16 @@ export class UpdatePayrollRuleDto {
   label?: string;
 
   @IsOptional()
-  @IsString()
-  contractType?: string;
+  @IsEnum(ContractType)
+  contractType?: ContractType;
 
   @IsOptional()
-  @IsString()
-  unit?: string;
+  @IsEnum(RuleUnit)
+  unit?: RuleUnit;
 
   @IsOptional()
   @IsNumber()
+  @Min(0)
   value?: number;
 
   @IsOptional()
