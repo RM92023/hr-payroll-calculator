@@ -21,7 +21,7 @@ if (!disableThrottler) {
   // cast to any because ThrottlerModule.forRoot returns a DynamicModule
   // and our `imports` array is typed as `any[]` to allow mixed entries.
   imports.unshift(
-    ThrottlerModule.forRoot({ ttl: 60, limit: 20 } as any) as any,
+    ThrottlerModule.forRoot([{ ttl: 60, limit: 20 }] as any) as any,
   );
   providers.push({ provide: APP_GUARD, useClass: ThrottlerGuard });
 }
